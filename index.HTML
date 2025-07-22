@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Disease Detector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      color: #17252a;
+    }
+    main {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      margin-top: 50px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .info-box {
+      margin-top: 20px;
+      background: #e6f7ff;
+      padding: 15px;
+      border-left: 5px solid #3aafa9;
+      border-radius: 5px;
+    }
+    .error { color: red; }
+    .success { color: green; }
+    .progress-bar {
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #3aafa9;
+      border-radius: 5px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+
+<header class="text-center bg-teal-600 text-white py-5 shadow-md">
+  <h1 class="text-2xl font-bold">🧠 AI Disease Detector</h1>
+  <p>Your smart assistant for medical certificate analysis</p>
+</header>
+
+<main>
+  <section id="upload">
+    <h2 class="text-xl font-semibold mb-2">📄 Upload Medical Certificate</h2>
+    <input type="file" id="fileUpload" accept="image/*" class="block mb-4 p-2 border border-dashed border-teal-500 rounded w-full">
+    <button onclick="analyzeFile()" class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded">Analyze File</button>
+
+    <div class="progress-bar" id="analyzeProgress" style="display: none;">
+      <div class="progress-bar-fill" id="analyzeProgressFill"></div>
+    </div>
+
+    <div id="result" class="info-box" style="display: none;"></div>
+  </section>
+</main>
+
+<script>
+  function analyzeFile() {
+    const fileInput = document.getElementById('fileUpload');
+    const resultDiv = document.getElementById('result');
+    const progressBar = document.getElementById('analyzeProgress');
+    const progressFill = document.getElementById('analyzeProgressFill');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+      resultDiv.innerHTML = '<p class="error">Please select a file first.</p>';
+      resultDiv.style.display = 'block';
+      return;
+    }
+
+    // Reset result and progress
+    progressBar.style.display = 'block';
+    resultDiv.style.display = 'none';
+    progressFill.style.width = '20%';
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fetch('/analyze', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      progressFill.style.width = '100%';
+
+      if (data.error) {
+        resultDiv.innerHTML = `<p class="error">${data.error}</p>`;
+      } else {
+        resultDiv.innerHTML = `
+          <h3 class="success">✅ Analysis Complete</h3>
+          <p><strong>Extracted Text:</strong><br>${data.text.replace(/\n/g, '<br>')}</p>
+          <p><strong>Prediction:</strong> ${data.prediction}</p>
+        `;
+      }
+
+      resultDiv.style.display = 'block';
+    })
+    .catch(error => {
+      resultDiv.innerHTML = `<p class="error">Error analyzing image: ${error.message}</p>`;
+      resultDiv.style.display = 'block';
+    });
+  }
+</script>
+
+</body>
+</html>
